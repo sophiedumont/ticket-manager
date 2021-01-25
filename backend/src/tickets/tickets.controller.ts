@@ -9,30 +9,43 @@ import {
   HttpStatus,
   HttpException,
   HttpCode,
+  UseGuards,
+  Request,
+  Req,
 } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { Ticket } from './schemas/ticket.schema';
-import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('tickets')
 @Controller('tickets')
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
+  @ApiBearerAuth()
   @HttpCode(201)
   @ApiResponse({
     status: 201,
     description: 'Create a new ticket',
     type: Ticket,
   })
-  async create(@Body() createTicketDto: CreateTicketDto): Promise<Ticket> {
+  async create(
+    @Request() req,
+    @Body() createTicketDto: CreateTicketDto,
+  ): Promise<Ticket> {
     try {
-      const ticket = await this.ticketsService.create(createTicketDto);
+      const ticket = await this.ticketsService.createWithCreator(
+        req.user,
+        createTicketDto,
+      );
       return ticket;
     } catch (err) {
+      console.log(err);
       throw new HttpException(
         {
           status: HttpStatus.BAD_REQUEST,
@@ -43,16 +56,18 @@ export class TicketsController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get()
+  @ApiBearerAuth()
   @HttpCode(200)
   @ApiResponse({
     status: 200,
-    description: 'The list of Tickets',
+    description: 'The list of my Tickets',
     type: Ticket,
     isArray: true,
   })
-  async findAll(): Promise<Ticket[]> {
-    return this.ticketsService.findAll();
+  async findAllByMe(@Request() req): Promise<Ticket[]> {
+    return this.ticketsService.findAllByMe(req.user.id);
   }
 
   @Get(':id')

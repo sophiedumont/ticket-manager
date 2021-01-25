@@ -56,7 +56,11 @@ export class UsersController {
     type: User,
   })
   async findOne(@Request() req): Promise<User> {
-    return req.user;
+    const user = await this.usersService.findOneWithTickets(req.user.id);
+    console.log({
+      user,
+    });
+    return user;
   }
 
   /* @Put(':id')
