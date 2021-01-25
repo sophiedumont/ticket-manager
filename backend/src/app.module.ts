@@ -7,7 +7,7 @@ import { UsersModule } from './users/users.module';
 @Module({
   imports: [
     MongooseModule.forRoot(
-      'mongodb://sophie:ticket@localhost:27017/ticket-manager',
+      'mongodb://sophie:ticket@mongodb:27017/ticket-manager',
     ),
     TicketsModule,
     AuthModule,
