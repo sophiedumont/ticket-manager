@@ -1,11 +1,8 @@
 import {
   Body,
   Controller,
-  Param,
   Get,
   Post,
-  Put,
-  Delete,
   HttpException,
   HttpStatus,
   HttpCode,
@@ -16,7 +13,6 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './schemas/user.schema';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('users')
@@ -62,9 +58,4 @@ export class UsersController {
     });
     return user;
   }
-
-  /* @Put(':id')
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
-  }*/
 }

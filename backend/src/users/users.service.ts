@@ -1,4 +1,4 @@
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './schemas/user.schema';
@@ -24,14 +24,22 @@ export class UsersService {
       });
       return createdUser.save();
     } catch (err) {
-      throw 'User already exists';
+      throw { message: 'User already exists' };
     }
   }
 
   async findOneByUsername(username: string): Promise<User> {
     const user = await this.userModel.findOne({ username: username }).exec();
-    if (!user) throw 'User not found';
+    if (!user) throw { message: 'User not found' };
     return user;
+  }
+
+  async findOneFilter(filter?: FilterQuery<User>): Promise<UserDocument> {
+    return this.userModel.findOne(filter).exec();
+  }
+
+  async findAll(): Promise<User[]> {
+    return this.userModel.find().exec();
   }
 
   async findOneWithTickets(id: string): Promise<User> {
@@ -42,7 +50,7 @@ export class UsersService {
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const updatedUser = this.userModel.updateOne({ _id: id }, updateUserDto);
     if (!updatedUser) {
-      throw 'User not found';
+      throw { message: 'User not found' };
     }
     return updatedUser;
   }
@@ -50,7 +58,7 @@ export class UsersService {
   async updateDocument(id: string, user: Partial<User>): Promise<User> {
     const updatedUser = this.userModel.updateOne({ _id: id }, user);
     if (!updatedUser) {
-      throw 'User not found';
+      throw { message: 'User not found' };
     }
     return updatedUser;
   }
@@ -60,7 +68,16 @@ export class UsersService {
       .findOne({ _id: id })
       .populate(populate)
       .exec();
-    if (!user) throw 'User not found';
+    if (!user) throw { message: 'User not found' };
+    return user;
+  }
+
+  async findOneAdmin(id: string, populate = ''): Promise<User> {
+    const user = await this.userModel
+      .findOne({ _id: id, isAdmin: true })
+      .populate(populate)
+      .exec();
+    if (!user) throw { message: 'Admin not found' };
     return user;
   }
 }

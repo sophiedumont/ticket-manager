@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, ObjectId } from 'mongoose';
 import { Ticket } from '../../tickets/schemas/ticket.schema';
 import * as mongoose from 'mongoose';
+import { TicketStatusEnum } from '../../tickets/enums/ticket-status.enum';
 
 export type UserDocument = User & Document;
 
@@ -12,8 +13,8 @@ export class User {
   @Prop([{ type: mongoose.Schema.Types.ObjectId, ref: 'Ticket' }])
   createdTickets: Ticket[];
 
-  //@Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Ticket' })
-  //assignedTickets: Ticket[];
+  @Prop([{ type: mongoose.Schema.Types.ObjectId, ref: 'Ticket' }])
+  assignedTickets: Ticket[];
 
   @Prop({ unique: true })
   username: string;
@@ -24,7 +25,7 @@ export class User {
   @Prop()
   password: string;
 
-  @Prop()
+  @Prop({ default: false })
   isAdmin: boolean;
 }
 

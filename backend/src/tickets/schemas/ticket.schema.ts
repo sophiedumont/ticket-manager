@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, ObjectId } from 'mongoose';
 import { TicketStatusEnum } from '../enums/ticket-status.enum';
 import { TicketTypeEnum } from '../enums/ticket-type.enum';
 import { TicketPriorityEnum } from '../enums/ticket-priority.enum';
@@ -10,6 +10,8 @@ export type TicketDocument = Ticket & Document;
 
 @Schema({ timestamps: { createdAt: true, updatedAt: true } })
 export class Ticket {
+  readonly _id: ObjectId;
+
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -18,8 +20,13 @@ export class Ticket {
   })
   creator: User | string;
 
-  // @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }] })
-  //assignedTo: User;
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    alias: 'assignedToId',
+    name: 'assignedToId',
+  })
+  assignedTo: User | string;
 
   @Prop()
   subject: string;

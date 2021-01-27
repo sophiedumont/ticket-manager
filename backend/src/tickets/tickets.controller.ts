@@ -11,7 +11,6 @@ import {
   HttpCode,
   UseGuards,
   Request,
-  Req,
 } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
@@ -101,10 +100,13 @@ export class TicketsController {
   })
   async update(
     @Param('id') id: string,
-    @Body() updateUserDto: UpdateTicketDto,
+    @Body() updateTicketDto: UpdateTicketDto,
   ): Promise<Ticket> {
     try {
-      const updatedTicket = await this.ticketsService.update(id, updateUserDto);
+      const updatedTicket = await this.ticketsService.update(
+        id,
+        updateTicketDto,
+      );
       return updatedTicket;
     } catch (err) {
       throw new HttpException(

@@ -1,4 +1,4 @@
-import { Model } from 'mongoose';
+import { Model, Schema } from 'mongoose';
 import { forwardRef, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Ticket, TicketDocument } from './schemas/ticket.schema';
@@ -6,7 +6,8 @@ import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { User } from '../users/schemas/user.schema';
 import { UsersService } from '../users/users.service';
-import { UpdateUserDto } from '../users/dto/update-user.dto';
+import * as mongoose from 'mongoose';
+const ObjectId = mongoose.Types.ObjectId;
 
 @Injectable()
 export class TicketsService {
@@ -59,27 +60,43 @@ export class TicketsService {
       const result = await this.update(id, updateTicketDto);
       return result;
     } else {
-      throw 'You are not allowed to update this ticket';
+      throw { message: 'You are not allowed to update this ticket' };
     }
   }
 
   async update(id: string, updateTicketDto: UpdateTicketDto): Promise<Ticket> {
-    const updatedTicket = this.ticketModel.updateOne(
-      { _id: id },
-      updateTicketDto,
-    );
-    if (!updatedTicket) {
-      throw 'Ticket not found';
-    }
+    const updatedTicket = this.updateDocument(id, updateTicketDto);
     return updatedTicket;
   }
 
   async remove(id: string) {
     const removedTicket = this.ticketModel.deleteOne({ _id: id }).exec();
     if (!removedTicket) {
-      throw 'Ticket not found';
+      throw { message: 'Ticket not found' };
     }
     return removedTicket;
+  }
+
+  async updateDocument(id: string, ticket: Partial<Ticket>): Promise<Ticket> {
+    const ticketFound = await this.findOne(id);
+    console.log({ ticketFound });
+    if (!ticketFound) {
+      throw { message: 'Ticket not found' };
+    }
+    const ticketDoc = this.mergeDocumentsBeforeUpdate(ticketFound, ticket);
+    console.log({ ticketDoc });
+    return await this.save(ticketDoc);
+  }
+
+  private mergeDocumentsBeforeUpdate(
+    ticket: Partial<Ticket>,
+    ticketToMerge: Partial<Ticket>,
+  ): TicketDocument {
+    const mergedTicket = new this.ticketModel(ticket);
+    for (const attr in ticketToMerge) {
+      mergedTicket[attr] = ticketToMerge[attr];
+    }
+    return mergedTicket;
   }
 
   async save(ticketToSave: TicketDocument) {
@@ -91,10 +108,37 @@ export class TicketsService {
       const creatorId = ticket.creator as string;
       creator = await this.userService.findOne(creatorId);
     }
-    if (!creator.createdTickets.some((t) => t === ticket.id)) {
+    if (
+      !creator.createdTickets.some((t) => t.toString() === ticket.id.toString())
+    ) {
       creator.createdTickets.push(ticket.id);
       await this.userService.updateDocument(creator._id.toString(), creator);
     }
+    let userAssignedTo;
+    if (ticket.populated('assignedTo')) {
+      userAssignedTo = ticket.assignedTo as User;
+    } else if (ObjectId.isValid(ticket.assignedTo as string)) {
+      const assignedToId = ticket.assignedTo as string;
+      userAssignedTo = await this.findOne(assignedToId);
+      //console.log({ userAssignedTo });
+    }
+    if (userAssignedTo) {
+      const user = userAssignedTo;
+      if (!user.assignedTickets.some((t) => t === ticket.id)) {
+        user.assignedTickets.push(ticket._id);
+        const oldUser = await this.userService.findOneFilter({
+          assignedTickets: ticket._id,
+        });
+        if (oldUser) {
+          oldUser.assignedTickets = oldUser.assignedTickets.filter(
+            (item) => item !== ticket._id,
+          );
+          await oldUser.save();
+        }
+        await user.save();
+      }
+    }
+    console.log({ ticket });
     return ticket;
   }
 }
