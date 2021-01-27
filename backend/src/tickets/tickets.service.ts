@@ -1,5 +1,5 @@
-import { Model, Schema } from 'mongoose';
-import { forwardRef, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { Model } from 'mongoose';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Ticket, TicketDocument } from './schemas/ticket.schema';
 import { CreateTicketDto } from './dto/create-ticket.dto';
@@ -7,6 +7,7 @@ import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { User } from '../users/schemas/user.schema';
 import { UsersService } from '../users/users.service';
 import * as mongoose from 'mongoose';
+import { PaginationDto } from '../dto/pagination.dto';
 const ObjectId = mongoose.Types.ObjectId;
 
 @Injectable()
@@ -33,8 +34,13 @@ export class TicketsService {
     return this.save(createdTicket);
   }
 
-  async findAll(): Promise<Ticket[]> {
-    return this.ticketModel.find().exec();
+  async findAll(pagination: PaginationDto): Promise<Ticket[]> {
+    console.log({ pagination });
+    return this.ticketModel
+      .find()
+      .limit(pagination.resultsPerPage)
+      .skip(pagination.resultsPerPage * (pagination.page - 1)) // Page 0 is the first page
+      .exec();
   }
 
   async findOne(id: string): Promise<Ticket> {
@@ -45,12 +51,19 @@ export class TicketsService {
     return this.ticketModel.findOne({ _id: id }).populate('creator').exec();
   }
 
-  async findAllByMe(userId: string): Promise<Ticket[]> {
-    const result = await this.ticketModel.find({ creator: userId });
+  async findAllWithCreator(
+    userId: string,
+    pagination: PaginationDto,
+  ): Promise<Ticket[]> {
+    const result = await this.ticketModel
+      .find({ creator: userId })
+      .limit(pagination.resultsPerPage)
+      .skip(pagination.resultsPerPage * (pagination.page - 1))
+      .exec();
     return result;
   }
 
-  async updateForUser(
+  /*async updateForUser(
     id: string,
     updateTicketDto: UpdateTicketDto,
     userId: string,
@@ -62,7 +75,7 @@ export class TicketsService {
     } else {
       throw { message: 'You are not allowed to update this ticket' };
     }
-  }
+  }*/
 
   async update(id: string, updateTicketDto: UpdateTicketDto): Promise<Ticket> {
     const updatedTicket = this.updateDocument(id, updateTicketDto);

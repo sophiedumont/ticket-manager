@@ -6,6 +6,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcryptjs';
 import { TicketsService } from '../tickets/tickets.service';
+import { PaginationDto } from '../dto/pagination.dto';
 
 @Injectable()
 export class UsersService {
@@ -38,8 +39,12 @@ export class UsersService {
     return this.userModel.findOne(filter).exec();
   }
 
-  async findAll(): Promise<User[]> {
-    return this.userModel.find().exec();
+  async findAll(pagination: PaginationDto): Promise<User[]> {
+    return this.userModel
+      .find()
+      .limit(pagination.resultsPerPage)
+      .skip(pagination.resultsPerPage * (pagination.page - 1)) // Page 0 is the first page
+      .exec();
   }
 
   async findOneWithTickets(id: string): Promise<User> {

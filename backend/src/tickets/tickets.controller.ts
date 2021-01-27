@@ -11,6 +11,7 @@ import {
   HttpCode,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
@@ -65,8 +66,15 @@ export class TicketsController {
     type: Ticket,
     isArray: true,
   })
-  async findAllByMe(@Request() req): Promise<Ticket[]> {
-    return this.ticketsService.findAllByMe(req.user.id);
+  async findAllWithCreator(
+    @Request() req,
+    @Query('page') page: string = '0',
+    @Query('resultsPerPage') resultsPerPage: string = '10',
+  ): Promise<Ticket[]> {
+    return this.ticketsService.findAllWithCreator(req.user.id, {
+      page: parseInt(page),
+      resultsPerPage: parseInt(resultsPerPage),
+    });
   }
 
   @Get(':id')

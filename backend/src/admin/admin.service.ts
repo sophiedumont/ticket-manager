@@ -1,11 +1,12 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { Ticket, TicketDocument } from '../tickets/schemas/ticket.schema';
+import { Injectable } from '@nestjs/common';
+import { Ticket } from '../tickets/schemas/ticket.schema';
 import { UsersService } from '../users/users.service';
 import { TicketsService } from '../tickets/tickets.service';
 import { User } from '../users/schemas/user.schema';
 import { UpdateTicketDto } from '../tickets/dto/update-ticket.dto';
 import { UpdateUserDto } from '../users/dto/update-user.dto';
 import { UpdateAssignedTicketDto } from '../tickets/dto/update-assigned-ticket.dto';
+import { PaginationDto } from '../dto/pagination.dto';
 
 @Injectable()
 export class AdminService {
@@ -13,12 +14,12 @@ export class AdminService {
     private userService: UsersService,
     private ticketService: TicketsService,
   ) {}
-  async findAllTickets(): Promise<Ticket[]> {
-    return this.ticketService.findAll();
+  async findAllTickets(pagination: PaginationDto): Promise<Ticket[]> {
+    return this.ticketService.findAll(pagination);
   }
 
-  async findAllUsers(): Promise<User[]> {
-    return this.userService.findAll();
+  async findAllUsers(pagination: PaginationDto): Promise<User[]> {
+    return this.userService.findAll(pagination);
   }
 
   async findOneTicket(id: string): Promise<Ticket> {

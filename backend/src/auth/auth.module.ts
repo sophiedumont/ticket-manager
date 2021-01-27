@@ -7,7 +7,7 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './constants';
 import { JwtStrategy } from './jwt.strategy';
-import { JwtStrategyAdmin } from './jwt-admin.stategy';
+import { JwtAdminStrategy } from './jwt-admin.strategy';
 
 @Module({
   controllers: [AuthController],
@@ -19,7 +19,7 @@ import { JwtStrategyAdmin } from './jwt-admin.stategy';
       signOptions: { expiresIn: '1d' },
     }),
   ],
-  providers: [AuthService, LocalStrategy, JwtStrategy, JwtStrategyAdmin],
+  providers: [AuthService, LocalStrategy, JwtStrategy, JwtAdminStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}

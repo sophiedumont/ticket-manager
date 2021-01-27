@@ -8,13 +8,11 @@ import {
   HttpStatus,
   Param,
   Put,
-  Request,
+  Query,
   UseGuards,
 } from '@nestjs/common';
-import { TicketsService } from '../tickets/tickets.service';
-import { UsersService } from '../users/users.service';
 import { Ticket } from '../tickets/schemas/ticket.schema';
-import { JwtAuthGuardAdmin } from '../auth/jwt-admin-auth.guard';
+import { JwtAdminAuthGuard } from '../auth/jwt-admin-auth.guard';
 import { AdminService } from './admin.service';
 import { User } from '../users/schemas/user.schema';
 import { UpdateTicketDto } from '../tickets/dto/update-ticket.dto';
@@ -24,13 +22,9 @@ import { UpdateAssignedTicketDto } from '../tickets/dto/update-assigned-ticket.d
 @ApiTags('admin')
 @Controller('admin')
 export class AdminController {
-  constructor(
-    private readonly adminService: AdminService,
-    private readonly ticketsService: TicketsService,
-    private readonly usersService: UsersService,
-  ) {}
+  constructor(private readonly adminService: AdminService) {}
 
-  @UseGuards(JwtAuthGuardAdmin)
+  @UseGuards(JwtAdminAuthGuard)
   @Get('tickets')
   @ApiBearerAuth()
   @HttpCode(200)
@@ -40,11 +34,17 @@ export class AdminController {
     type: Ticket,
     isArray: true,
   })
-  async findAllTickets(): Promise<Ticket[]> {
-    return this.adminService.findAllTickets();
+  async findAllTickets(
+    @Query('page') page: string = '0',
+    @Query('resultsPerPage') resultsPerPage: string = '10',
+  ): Promise<Ticket[]> {
+    return this.adminService.findAllTickets({
+      page: parseInt(page),
+      resultsPerPage: parseInt(resultsPerPage),
+    });
   }
 
-  @UseGuards(JwtAuthGuardAdmin)
+  @UseGuards(JwtAdminAuthGuard)
   @Get('tickets/:id')
   @ApiBearerAuth()
   @HttpCode(200)
@@ -69,7 +69,7 @@ export class AdminController {
     }
   }
 
-  @UseGuards(JwtAuthGuardAdmin)
+  @UseGuards(JwtAdminAuthGuard)
   @Get('users/:id')
   @ApiBearerAuth()
   @HttpCode(200)
@@ -94,7 +94,7 @@ export class AdminController {
     }
   }
 
-  @UseGuards(JwtAuthGuardAdmin)
+  @UseGuards(JwtAdminAuthGuard)
   @Get('users')
   @ApiBearerAuth()
   @HttpCode(200)
@@ -104,11 +104,17 @@ export class AdminController {
     type: Ticket,
     isArray: true,
   })
-  async findAllUsers(): Promise<User[]> {
-    return this.adminService.findAllUsers();
+  async findAllUsers(
+    @Query('page') page: string = '0',
+    @Query('resultsPerPage') resultsPerPage: string = '10',
+  ): Promise<User[]> {
+    return this.adminService.findAllUsers({
+      page: parseInt(page),
+      resultsPerPage: parseInt(resultsPerPage),
+    });
   }
 
-  @UseGuards(JwtAuthGuardAdmin)
+  @UseGuards(JwtAdminAuthGuard)
   @Put('users/:id')
   @ApiBearerAuth()
   @HttpCode(200)
