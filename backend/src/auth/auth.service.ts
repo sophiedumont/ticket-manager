@@ -21,8 +21,12 @@ export class AuthService {
 
   async login(user: any) {
     const payload = { username: user.username, id: user._id.toString() };
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+    try {
+      return {
+        access_token: this.jwtService.sign(payload),
+      };
+    } catch (e) {
+      throw 'Wrong credentials';
+    }
   }
 }

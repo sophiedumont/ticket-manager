@@ -5,6 +5,8 @@ import {
   UseGuards,
   HttpCode,
   Body,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { LocalAuthGuard } from './local-auth.guard';
 import { AuthService } from './auth.service';
@@ -23,6 +25,16 @@ export class AuthController {
     description: 'Sign In',
   })
   async login(@Body() credentialsDto: CredentialsDto, @Request() req) {
-    return this.authService.login(req.user);
+    try {
+      return this.authService.login(req.user);
+    } catch (e) {
+      throw new HttpException(
+        {
+          status: HttpStatus.BAD_REQUEST,
+          message: e.message,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 }

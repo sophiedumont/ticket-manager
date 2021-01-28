@@ -1,14 +1,17 @@
-import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 import {
   Body,
   Controller,
   Get,
+  Header,
   HttpCode,
   HttpException,
   HttpStatus,
   Param,
   Put,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { Ticket } from '../tickets/schemas/ticket.schema';
@@ -18,6 +21,8 @@ import { User } from '../users/schemas/user.schema';
 import { UpdateTicketDto } from '../tickets/dto/update-ticket.dto';
 import { UpdateUserDto } from '../users/dto/update-user.dto';
 import { UpdateAssignedTicketDto } from '../tickets/dto/update-assigned-ticket.dto';
+import { PageDto } from '../dto/page.dto';
+import { schemaToAdminDto } from './dto/admin-response.dto';
 
 @ApiTags('admin')
 @Controller('admin')
@@ -34,14 +39,14 @@ export class AdminController {
     type: Ticket,
     isArray: true,
   })
-  async findAllTickets(
-    @Query('page') page: string = '0',
-    @Query('resultsPerPage') resultsPerPage: string = '10',
-  ): Promise<Ticket[]> {
-    return this.adminService.findAllTickets({
-      page: parseInt(page),
-      resultsPerPage: parseInt(resultsPerPage),
-    });
+  @Header('Access-Control-Expose-Headers', 'Content-Range')
+  async findAllTickets(@Res() res: Response, @Query() pageDto: PageDto) {
+    const [tickets, total, range] = await this.adminService.findAllTickets(
+      pageDto,
+    );
+    const header = 'tickets ' + range + '/' + total;
+    res.setHeader('Content-Range', header);
+    return res.json(tickets.map((t) => schemaToAdminDto(t)));
   }
 
   @UseGuards(JwtAdminAuthGuard)
@@ -101,17 +106,15 @@ export class AdminController {
   @ApiResponse({
     status: 200,
     description: 'The list of Users',
-    type: Ticket,
+    type: User,
     isArray: true,
   })
-  async findAllUsers(
-    @Query('page') page: string = '0',
-    @Query('resultsPerPage') resultsPerPage: string = '10',
-  ): Promise<User[]> {
-    return this.adminService.findAllUsers({
-      page: parseInt(page),
-      resultsPerPage: parseInt(resultsPerPage),
-    });
+  @Header('Access-Control-Expose-Headers', 'Content-Range')
+  async findAllUsers(@Res() res: Response, @Query() pageDto: PageDto) {
+    const [users, total, range] = await this.adminService.findAllUsers(pageDto);
+    const header = 'users ' + range + '/' + total;
+    res.setHeader('Content-Range', header);
+    return res.json(users.map((t) => schemaToAdminDto(t)));
   }
 
   @UseGuards(JwtAdminAuthGuard)

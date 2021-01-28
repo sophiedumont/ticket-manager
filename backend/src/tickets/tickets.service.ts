@@ -7,7 +7,7 @@ import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { User } from '../users/schemas/user.schema';
 import { UsersService } from '../users/users.service';
 import * as mongoose from 'mongoose';
-import { PaginationDto } from '../dto/pagination.dto';
+import { PageDto } from '../dto/page.dto';
 const ObjectId = mongoose.Types.ObjectId;
 
 @Injectable()
@@ -34,13 +34,27 @@ export class TicketsService {
     return this.save(createdTicket);
   }
 
-  async findAll(pagination: PaginationDto): Promise<Ticket[]> {
-    console.log({ pagination });
-    return this.ticketModel
-      .find()
-      .limit(pagination.resultsPerPage)
-      .skip(pagination.resultsPerPage * (pagination.page - 1)) // Page 0 is the first page
-      .exec();
+  async findAll(page: PageDto): Promise<[Ticket[], number, string]> {
+    try {
+      const range = JSON.parse(page.range);
+      const limit = range[1] + 1 - range[0];
+      const skip = range[0];
+      const sort = page.sort ? JSON.parse(page.sort) : ['createdAt', 'desc'];
+      const count = await this.findAllAndCount();
+      const tickets = await this.ticketModel
+        .find()
+        .limit(limit)
+        .skip(skip)
+        .sort({ [sort[0]]: sort[1] })
+        .exec();
+      return [tickets, count, range.join('-')];
+    } catch (e) {
+      throw 'Tickets not found';
+    }
+  }
+
+  async findAllAndCount(): Promise<number> {
+    return this.ticketModel.find().count().exec();
   }
 
   async findOne(id: string): Promise<Ticket> {
@@ -51,16 +65,28 @@ export class TicketsService {
     return this.ticketModel.findOne({ _id: id }).populate('creator').exec();
   }
 
-  async findAllWithCreator(
-    userId: string,
-    pagination: PaginationDto,
-  ): Promise<Ticket[]> {
-    const result = await this.ticketModel
-      .find({ creator: userId })
-      .limit(pagination.resultsPerPage)
-      .skip(pagination.resultsPerPage * (pagination.page - 1))
-      .exec();
-    return result;
+  async findAllWithCreator(id: string, page: PageDto): Promise<Ticket[]> {
+    try {
+      const range = JSON.parse(page.range);
+      const limit = range[1] + 1 - range[0];
+      const skip = range[0];
+      const sort = page.sort ? JSON.parse(page.sort) : ['createdAt', 'desc'];
+      const count = await this.findAllWithCreatorAndCount(id);
+
+      const tickets = await this.ticketModel
+        .find({ creator: id })
+        .limit(limit)
+        .skip(skip)
+        .sort({ [sort[0]]: sort[1] })
+        .exec();
+      return [tickets, count, range.join('-')];
+    } catch (e) {
+      throw 'Tickets not found';
+    }
+  }
+
+  async findAllWithCreatorAndCount(id: string): Promise<number> {
+    return this.ticketModel.find({ creator: id }).count().exec();
   }
 
   /*async updateForUser(
@@ -133,7 +159,6 @@ export class TicketsService {
     } else if (ObjectId.isValid(ticket.assignedTo as string)) {
       const assignedToId = ticket.assignedTo as string;
       userAssignedTo = await this.findOne(assignedToId);
-      //console.log({ userAssignedTo });
     }
     if (userAssignedTo) {
       const user = userAssignedTo;
@@ -151,7 +176,6 @@ export class TicketsService {
         await user.save();
       }
     }
-    console.log({ ticket });
     return ticket;
   }
 }

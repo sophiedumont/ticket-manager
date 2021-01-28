@@ -6,7 +6,7 @@ import { User } from '../users/schemas/user.schema';
 import { UpdateTicketDto } from '../tickets/dto/update-ticket.dto';
 import { UpdateUserDto } from '../users/dto/update-user.dto';
 import { UpdateAssignedTicketDto } from '../tickets/dto/update-assigned-ticket.dto';
-import { PaginationDto } from '../dto/pagination.dto';
+import { PageDto } from '../dto/page.dto';
 
 @Injectable()
 export class AdminService {
@@ -14,11 +14,13 @@ export class AdminService {
     private userService: UsersService,
     private ticketService: TicketsService,
   ) {}
-  async findAllTickets(pagination: PaginationDto): Promise<Ticket[]> {
+  async findAllTickets(
+    pagination: PageDto,
+  ): Promise<[Ticket[], number, string]> {
     return this.ticketService.findAll(pagination);
   }
 
-  async findAllUsers(pagination: PaginationDto): Promise<User[]> {
+  async findAllUsers(pagination: PageDto): Promise<[User[], number, string]> {
     return this.userService.findAll(pagination);
   }
 

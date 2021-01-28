@@ -6,7 +6,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcryptjs';
 import { TicketsService } from '../tickets/tickets.service';
-import { PaginationDto } from '../dto/pagination.dto';
+import { PageDto } from '../dto/page.dto';
 
 @Injectable()
 export class UsersService {
@@ -39,12 +39,27 @@ export class UsersService {
     return this.userModel.findOne(filter).exec();
   }
 
-  async findAll(pagination: PaginationDto): Promise<User[]> {
-    return this.userModel
-      .find()
-      .limit(pagination.resultsPerPage)
-      .skip(pagination.resultsPerPage * (pagination.page - 1)) // Page 0 is the first page
-      .exec();
+  async findAll(page: PageDto): Promise<[User[], number, string]> {
+    try {
+      const range = JSON.parse(page.range);
+      const limit = range[1] + 1 - range[0];
+      const skip = range[0];
+      const sort = page.sort ? JSON.parse(page.sort) : ['username', 'desc'];
+      const count = await this.findAllAndCount();
+      const users = await this.userModel
+        .find()
+        .limit(limit)
+        .skip(skip)
+        .sort({ [sort[0]]: sort[1] })
+        .exec();
+      return [users, count, range.join('-')];
+    } catch (e) {
+      throw 'Users not found';
+    }
+  }
+
+  async findAllAndCount(): Promise<number> {
+    return this.userModel.find().count().exec();
   }
 
   async findOneWithTickets(id: string): Promise<User> {

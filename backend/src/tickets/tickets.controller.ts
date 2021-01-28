@@ -16,9 +16,10 @@ import {
 import { TicketsService } from './tickets.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { Ticket } from './schemas/ticket.schema';
-import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PageDto } from '../dto/page.dto';
 
 @ApiTags('tickets')
 @Controller('tickets')
@@ -66,15 +67,14 @@ export class TicketsController {
     type: Ticket,
     isArray: true,
   })
-  async findAllWithCreator(
-    @Request() req,
-    @Query('page') page: string = '0',
-    @Query('resultsPerPage') resultsPerPage: string = '10',
-  ): Promise<Ticket[]> {
-    return this.ticketsService.findAllWithCreator(req.user.id, {
-      page: parseInt(page),
-      resultsPerPage: parseInt(resultsPerPage),
-    });
+  async findAllTickets(@Request() req, @Query() pageDto: PageDto) {
+    const [
+      tickets,
+      total,
+      range,
+    ] = await this.ticketsService.findAllWithCreator(req.user.id, pageDto);
+    const header = 'tickets ' + range + '/' + total;
+    return tickets;
   }
 
   @Get(':id')
