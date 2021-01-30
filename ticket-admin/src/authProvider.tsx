@@ -34,6 +34,7 @@ const authProvider = {
     }
     return Promise.resolve();
   },
+
   checkAuth: () =>
     localStorage.getItem('auth') ? Promise.resolve() : Promise.reject(),
 

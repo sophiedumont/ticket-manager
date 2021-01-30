@@ -7,6 +7,8 @@ import { UpdateTicketDto } from '../tickets/dto/update-ticket.dto';
 import { UpdateUserDto } from '../users/dto/update-user.dto';
 import { UpdateAssignedTicketDto } from '../tickets/dto/update-assigned-ticket.dto';
 import { PageDto } from '../dto/page.dto';
+import { CreateUserDto } from '../users/dto/create-user.dto';
+import { CreateTicketDto } from '../tickets/dto/create-ticket.dto';
 
 @Injectable()
 export class AdminService {
@@ -52,5 +54,26 @@ export class AdminService {
 
   async updateOneUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     return this.userService.update(id, updateUserDto);
+  }
+
+  async createOneUser(createUserDto: CreateUserDto): Promise<User> {
+    return this.userService.create(createUserDto);
+  }
+
+  async createOneTicket(
+    userId: string,
+    createTicketDto: CreateTicketDto,
+  ): Promise<Ticket> {
+    console.log('toto');
+    console.log({ userId });
+    return this.ticketService.createWithCreator(userId, createTicketDto);
+  }
+
+  async deleteOneUser(id: string): Promise<User> {
+    return this.userService.findOneAndDelete(id);
+  }
+
+  async deleteOneTicket(id: string): Promise<Ticket> {
+    return this.ticketService.findOneAndDelete(id);
   }
 }

@@ -1,4 +1,4 @@
-import { ApiBearerAuth, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import {
   Body,
@@ -10,9 +10,12 @@ import {
   HttpStatus,
   Param,
   Put,
+  Post,
   Query,
   Res,
+  Delete,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { Ticket } from '../tickets/schemas/ticket.schema';
 import { JwtAdminAuthGuard } from '../auth/jwt-admin-auth.guard';
@@ -23,6 +26,8 @@ import { UpdateUserDto } from '../users/dto/update-user.dto';
 import { UpdateAssignedTicketDto } from '../tickets/dto/update-assigned-ticket.dto';
 import { PageDto } from '../dto/page.dto';
 import { schemaToAdminDto } from './dto/admin-response.dto';
+import { CreateTicketDto } from '../tickets/dto/create-ticket.dto';
+import { CreateUserDto } from '../users/dto/create-user.dto';
 
 @ApiTags('admin')
 @Controller('admin')
@@ -59,10 +64,10 @@ export class AdminController {
     type: Ticket,
     isArray: true,
   })
-  async findOneTicket(@Param('id') id: string): Promise<Ticket> {
+  async findOneTicket(@Param('id') id: string): Promise<any> {
     try {
       const ticket = await this.adminService.findOneTicket(id);
-      return ticket;
+      return schemaToAdminDto(ticket);
     } catch (err) {
       throw new HttpException(
         {
@@ -84,10 +89,10 @@ export class AdminController {
     type: Ticket,
     isArray: true,
   })
-  async findOneUser(@Param('id') id: string): Promise<User> {
+  async findOneUser(@Param('id') id: string): Promise<any> {
     try {
       const user = await this.adminService.findOneUser(id);
-      return user;
+      return schemaToAdminDto(user);
     } catch (err) {
       throw new HttpException(
         {
@@ -111,10 +116,17 @@ export class AdminController {
   })
   @Header('Access-Control-Expose-Headers', 'Content-Range')
   async findAllUsers(@Res() res: Response, @Query() pageDto: PageDto) {
-    const [users, total, range] = await this.adminService.findAllUsers(pageDto);
-    const header = 'users ' + range + '/' + total;
-    res.setHeader('Content-Range', header);
-    return res.json(users.map((t) => schemaToAdminDto(t)));
+    try {
+      const [users, total, range] = await this.adminService.findAllUsers(
+        pageDto,
+      );
+      const header = 'users ' + range + '/' + total;
+      res.setHeader('Content-Range', header);
+      return res.json(users.map((t) => schemaToAdminDto(t)));
+    } catch (e) {
+      console.log(e);
+      return res.json([]);
+    }
   }
 
   @UseGuards(JwtAdminAuthGuard)
@@ -135,7 +147,7 @@ export class AdminController {
         id,
         updateUserDto,
       );
-      return updatedUser;
+      return schemaToAdminDto(updatedUser);
     } catch (err) {
       throw new HttpException(
         {
@@ -147,6 +159,8 @@ export class AdminController {
     }
   }
 
+  @UseGuards(JwtAdminAuthGuard)
+  @ApiBearerAuth()
   @Put('tickets/assign/:id')
   @HttpCode(200)
   @ApiResponse({
@@ -177,6 +191,8 @@ export class AdminController {
     }
   }
 
+  @UseGuards(JwtAdminAuthGuard)
+  @ApiBearerAuth()
   @Put('tickets/:id')
   @HttpCode(200)
   @ApiResponse({
@@ -187,15 +203,119 @@ export class AdminController {
   async updateOneTicketContent(
     @Param('id') id: string,
     @Body() updateTicketDto: UpdateTicketDto,
-  ): Promise<Ticket> {
+  ): Promise<any> {
     try {
       const updatedTicket = await this.adminService.updateOneTicketContent(
         id,
         updateTicketDto,
       );
-      return updatedTicket;
+      return schemaToAdminDto(updatedTicket);
     } catch (err) {
       console.log(err);
+      throw new HttpException(
+        {
+          status: HttpStatus.BAD_REQUEST,
+          message: [err.message],
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @UseGuards(JwtAdminAuthGuard)
+  @ApiBearerAuth()
+  @Post('tickets')
+  @HttpCode(201)
+  @ApiResponse({
+    status: 200,
+    description: 'Create a new ticket',
+    type: Ticket,
+  })
+  async createOneTicket(
+    @Request() req,
+    @Body() createTicketDto: CreateTicketDto,
+  ): Promise<any> {
+    try {
+      const createdTicket = await this.adminService.createOneTicket(
+        req.user.id,
+        createTicketDto,
+      );
+      return schemaToAdminDto(createdTicket);
+    } catch (err) {
+      console.log(err);
+      throw new HttpException(
+        {
+          status: HttpStatus.BAD_REQUEST,
+          message: [err.message],
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @UseGuards(JwtAdminAuthGuard)
+  @ApiBearerAuth()
+  @Post('users')
+  @HttpCode(201)
+  @ApiResponse({
+    status: 200,
+    description: 'Create a new user',
+    type: Ticket,
+  })
+  async createOneUser(@Body() createUserDto: CreateUserDto): Promise<any> {
+    try {
+      const createdUser = await this.adminService.createOneUser(createUserDto);
+      return schemaToAdminDto(createdUser);
+    } catch (err) {
+      console.log(err);
+      throw new HttpException(
+        {
+          status: HttpStatus.BAD_REQUEST,
+          message: [err.message],
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @UseGuards(JwtAdminAuthGuard)
+  @ApiBearerAuth()
+  @Delete('users/:id')
+  @HttpCode(200)
+  @ApiResponse({
+    status: 200,
+    description: 'Delete an user',
+    type: Ticket,
+  })
+  async deleteOneUser(@Param('id') id: string): Promise<any> {
+    try {
+      const removedUser = await this.adminService.deleteOneUser(id);
+      return schemaToAdminDto(removedUser);
+    } catch (err) {
+      throw new HttpException(
+        {
+          status: HttpStatus.BAD_REQUEST,
+          message: [err.message],
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @UseGuards(JwtAdminAuthGuard)
+  @ApiBearerAuth()
+  @Delete('tickets/:id')
+  @HttpCode(200)
+  @ApiResponse({
+    status: 200,
+    type: Ticket,
+    description: 'Delete a Ticket',
+  })
+  async deleteOneTicket(@Param('id') id: string): Promise<any> {
+    try {
+      const removedTicket = await this.adminService.deleteOneTicket(id);
+      return schemaToAdminDto(removedTicket);
+    } catch (err) {
       throw new HttpException(
         {
           status: HttpStatus.BAD_REQUEST,

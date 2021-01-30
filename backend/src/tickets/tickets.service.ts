@@ -1,10 +1,10 @@
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Ticket, TicketDocument } from './schemas/ticket.schema';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
-import { User } from '../users/schemas/user.schema';
+import { User, UserDocument } from '../users/schemas/user.schema';
 import { UsersService } from '../users/users.service';
 import * as mongoose from 'mongoose';
 import { PageDto } from '../dto/page.dto';
@@ -20,6 +20,7 @@ export class TicketsService {
 
   async create(createTicketDto: CreateTicketDto): Promise<Ticket> {
     const createdTicket = new this.ticketModel(createTicketDto);
+    if (!createdTicket) throw 'Ticket not created';
     return createdTicket.save();
   }
 
@@ -31,18 +32,33 @@ export class TicketsService {
       ...createTicketDto,
       creator: userId,
     });
+    console.log({ createdTicket });
     return this.save(createdTicket);
+  }
+
+  convert(filter: any) {
+    const returnedObj = {};
+
+    for (const attr in filter) {
+      if (Array.isArray(filter[attr])) {
+        returnedObj[attr === '_id' ? 'id' : attr] = { $in: filter[attr] };
+      } else {
+        returnedObj[attr] = filter[attr];
+      }
+    }
+    return returnedObj;
   }
 
   async findAll(page: PageDto): Promise<[Ticket[], number, string]> {
     try {
-      const range = JSON.parse(page.range);
+      const filters = JSON.parse(page.filter || '{}');
+      const range = page.sort ? JSON.parse(page.range) : [0, 9];
       const limit = range[1] + 1 - range[0];
       const skip = range[0];
       const sort = page.sort ? JSON.parse(page.sort) : ['createdAt', 'desc'];
       const count = await this.findAllAndCount();
       const tickets = await this.ticketModel
-        .find()
+        .find(this.convert(filters))
         .limit(limit)
         .skip(skip)
         .sort({ [sort[0]]: sort[1] })
@@ -61,13 +77,20 @@ export class TicketsService {
     return this.ticketModel.findOne({ _id: id }).exec();
   }
 
+  async findOneFilter(filter?: FilterQuery<User>): Promise<TicketDocument> {
+    return this.ticketModel.findOne(filter).exec();
+  }
+  async findFilter(filter?: FilterQuery<User>): Promise<TicketDocument[]> {
+    return this.ticketModel.find(filter).exec();
+  }
+
   async findOneWithCreator(id: string): Promise<Ticket> {
     return this.ticketModel.findOne({ _id: id }).populate('creator').exec();
   }
 
   async findAllWithCreator(id: string, page: PageDto): Promise<Ticket[]> {
     try {
-      const range = JSON.parse(page.range);
+      const range = page.sort ? JSON.parse(page.range) : [0, 9];
       const limit = range[1] + 1 - range[0];
       const skip = range[0];
       const sort = page.sort ? JSON.parse(page.sort) : ['createdAt', 'desc'];
@@ -81,6 +104,7 @@ export class TicketsService {
         .exec();
       return [tickets, count, range.join('-')];
     } catch (e) {
+      console.log(e);
       throw 'Tickets not found';
     }
   }
@@ -108,11 +132,15 @@ export class TicketsService {
     return updatedTicket;
   }
 
-  async remove(id: string) {
-    const removedTicket = this.ticketModel.deleteOne({ _id: id }).exec();
+  async findOneAndDelete(id: string): Promise<Ticket> {
+    const removedTicket = await this.ticketModel
+      .findOneAndDelete({ _id: id })
+      .exec();
+    console.log({ removedTicket });
     if (!removedTicket) {
       throw { message: 'Ticket not found' };
     }
+    await this.removeAllReferencesInTicket(removedTicket);
     return removedTicket;
   }
 
@@ -138,44 +166,67 @@ export class TicketsService {
     return mergedTicket;
   }
 
-  async save(ticketToSave: TicketDocument) {
-    const ticket = await ticketToSave.save();
-    let creator;
-    if (ticket.populated('creator')) {
-      creator = ticket.creator as User;
-    } else {
-      const creatorId = ticket.creator as string;
-      creator = await this.userService.findOne(creatorId);
+  async removeAllReferencesInTicket(ticket: TicketDocument): Promise<void> {
+    await this.removeTicketRefFromUser(ticket, 'assignedTickets');
+    await this.removeTicketRefFromUser(ticket, 'createdTickets');
+  }
+  async findTicketUserReference(
+    ticket: TicketDocument,
+    ref: string,
+  ): Promise<UserDocument> {
+    let user;
+    if (ticket.populated[ref]) {
+      user = ticket[ref] as UserDocument;
+    } else if (ObjectId.isValid(ticket[ref] as string)) {
+      const refId = ticket[ref] as string;
+      user = await this.userService.findOne(refId);
     }
-    if (
-      !creator.createdTickets.some((t) => t.toString() === ticket.id.toString())
-    ) {
-      creator.createdTickets.push(ticket.id);
-      await this.userService.updateDocument(creator._id.toString(), creator);
-    }
-    let userAssignedTo;
-    if (ticket.populated('assignedTo')) {
-      userAssignedTo = ticket.assignedTo as User;
-    } else if (ObjectId.isValid(ticket.assignedTo as string)) {
-      const assignedToId = ticket.assignedTo as string;
-      userAssignedTo = await this.findOne(assignedToId);
-    }
-    if (userAssignedTo) {
-      const user = userAssignedTo;
-      if (!user.assignedTickets.some((t) => t === ticket.id)) {
-        user.assignedTickets.push(ticket._id);
-        const oldUser = await this.userService.findOneFilter({
-          assignedTickets: ticket._id,
-        });
-        if (oldUser) {
-          oldUser.assignedTickets = oldUser.assignedTickets.filter(
-            (item) => item !== ticket._id,
-          );
-          await oldUser.save();
-        }
-        await user.save();
+    return user;
+  }
+  async assignTicketToUserRef(
+    ticket: TicketDocument,
+    user: UserDocument,
+    ref: string,
+  ): Promise<User> {
+    let savedUser = user;
+    if (user) {
+      if (!user[ref].some((t) => t.toString() === ticket._id.toString())) {
+        user[ref].push(ticket._id);
+        savedUser = await user.save();
       }
     }
+    return savedUser;
+  }
+  async removeTicketRefFromUser(
+    ticket: TicketDocument,
+    ref: string,
+  ): Promise<User> {
+    const oldAssignedUser = await this.userService.findOneFilter({
+      [ref]: ticket._id,
+    });
+    let savedUser = oldAssignedUser;
+    if (oldAssignedUser) {
+      oldAssignedUser[ref] = oldAssignedUser[ref].filter(
+        (item) => item.toString() !== ticket._id.toString(),
+      );
+      savedUser = await oldAssignedUser.save();
+    }
+    return savedUser;
+  }
+
+  async save(ticketToSave: TicketDocument, noRefCheck = false) {
+    const ticket = await ticketToSave.save();
+    if (noRefCheck) {
+      return ticket;
+    }
+    const creator = await this.findTicketUserReference(ticket, 'creator');
+    const userAssignedTo = await this.findTicketUserReference(
+      ticket,
+      'assignedTo',
+    );
+    await this.removeTicketRefFromUser(ticket, 'assignedTickets');
+    await this.assignTicketToUserRef(ticket, creator, 'createdTickets');
+    await this.assignTicketToUserRef(ticket, userAssignedTo, 'assignedTickets');
     return ticket;
   }
 }

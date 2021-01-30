@@ -133,9 +133,9 @@ export class TicketsController {
     status: 204,
     description: 'Remove a ticket',
   })
-  async remove(@Param('id') id: string) {
+  async deleteOneTicket(@Param('id') id: string) {
     try {
-      await this.ticketsService.remove(id);
+      await this.ticketsService.findOneAndDelete(id);
     } catch (err) {
       throw new HttpException(
         {

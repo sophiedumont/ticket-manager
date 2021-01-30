@@ -3,8 +3,10 @@ import './App.css';
 import { fetchUtils, Admin, Resource } from 'react-admin';
 import simpleRestProvider from 'ra-data-simple-rest';
 import authProvider from './authProvider';
-import { UserList } from './users';
-import { TicketList } from './tickets';
+import { UserList, UserCreate, UserEdit } from './users';
+import { TicketList, TicketCreate, TicketEdit } from './tickets';
+import PostIcon from '@material-ui/icons/Book';
+import UserIcon from '@material-ui/icons/Group';
 
 const httpClient = (url: string, options: fetchUtils.Options = {}) => {
   if (!options.headers) {
@@ -22,18 +24,23 @@ const App = () => (
   <Admin
     dataProvider={dataProvider}
     authProvider={authProvider}
-    title="Example Admin"
+    title="Admin pannel"
   >
     <Resource
       name="admin/tickets"
       options={{ label: 'Tickets' }}
       list={TicketList}
+      create={TicketCreate}
+      edit={TicketEdit}
+      icon={PostIcon}
     />
     <Resource
-      name="admin/users
-    "
+      name="admin/users"
       options={{ label: 'Users' }}
       list={UserList}
+      create={UserCreate}
+      edit={UserEdit}
+      icon={UserIcon}
     />
   </Admin>
 );
