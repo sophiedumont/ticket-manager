@@ -23,10 +23,6 @@ const UpdateTicket = () => {
   const [didInit, setInit] = useState(false);
   const dispatch = useDispatch()
 
-  console.log(id);
-
-  console.log({didInit})
-
   useEffect( () => {
     if(!didInit){
       const getTicket = async () => {

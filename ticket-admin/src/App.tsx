@@ -13,7 +13,6 @@ const httpClient = (url: string, options: fetchUtils.Options = {}) => {
     options.headers = new Headers({ Accept: 'application/json' });
   }
   const token = localStorage.getItem('auth');
-  console.log({ token });
   //@ts-ignore
   options.headers.set('Authorization', `Bearer ${token}`);
   return fetchUtils.fetchJson(url, options);

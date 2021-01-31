@@ -23,6 +23,24 @@ services:
     ports:
       - "3000:3000"
 
+  admin:
+    build: ./ticket-admin
+    working_dir: /ticket-admin
+    volumes:
+      - ./ticket-admin:/ticket-admin
+    restart: on-failure
+    ports:
+      - "3002:3002"
+
+  front:
+    build: ./ticket-manager
+    working_dir: /ticket-manager
+    volumes:
+      - ./ticket-manager:/ticket-manager
+    restart: on-failure
+    ports:
+      - "3001:3001"
+
 volumes:
   mongo-data:
     driver: local

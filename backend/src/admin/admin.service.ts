@@ -48,7 +48,6 @@ export class AdminService {
     const assignedTo = await this.userService.findOneAdmin(
       updateAssignedTicketDto.assignedTo,
     );
-    console.log({ assignedTo });
     return this.ticketService.updateDocument(id, { assignedTo: assignedTo });
   }
 
@@ -64,8 +63,6 @@ export class AdminService {
     userId: string,
     createTicketDto: CreateTicketDto,
   ): Promise<Ticket> {
-    console.log('toto');
-    console.log({ userId });
     return this.ticketService.createWithCreator(userId, createTicketDto);
   }
 

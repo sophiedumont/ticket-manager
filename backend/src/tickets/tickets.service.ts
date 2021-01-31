@@ -32,7 +32,6 @@ export class TicketsService {
       ...createTicketDto,
       creator: userId,
     });
-    console.log({ createdTicket });
     return this.save(createdTicket);
   }
 
@@ -139,7 +138,6 @@ export class TicketsService {
     const removedTicket = await this.ticketModel
       .findOneAndDelete({ _id: id })
       .exec();
-    console.log({ removedTicket });
     if (!removedTicket) {
       throw { message: 'Ticket not found' };
     }
@@ -149,12 +147,10 @@ export class TicketsService {
 
   async updateDocument(id: string, ticket: Partial<Ticket>): Promise<Ticket> {
     const ticketFound = await this.findOne(id);
-    console.log({ ticketFound });
     if (!ticketFound) {
       throw { message: 'Ticket not found' };
     }
     const ticketDoc = this.mergeDocumentsBeforeUpdate(ticketFound, ticket);
-    console.log({ ticketDoc });
     return await this.save(ticketDoc);
   }
 

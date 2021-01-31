@@ -31,6 +31,20 @@ export class UsersService {
     }
   }
 
+  async createAdmin(createUserDto: CreateUserDto): Promise<User> {
+    try {
+      const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+      const createdUser = new this.userModel({
+        ...createUserDto,
+        password: hashedPassword,
+        isAdmin: true,
+      });
+      return createdUser.save();
+    } catch (err) {
+      throw { message: 'User already exists' };
+    }
+  }
+
   async findOneByUsername(username: string): Promise<User> {
     const user = await this.userModel.findOne({ username: username }).exec();
     if (!user) throw { message: 'User not found' };
@@ -46,7 +60,7 @@ export class UsersService {
 
     for (const attr in filter) {
       if (Array.isArray(filter[attr])) {
-        returnedObj[attr === '_id' ? 'id' : attr] = { $in: filter[attr] };
+        returnedObj[attr === 'id' ? '_id' : attr] = { $in: filter[attr] };
       } else {
         returnedObj[attr] = filter[attr];
       }

@@ -177,7 +177,6 @@ export class AdminController {
         id,
         updateAssignedTicketDto,
       );
-      console.log({ updatedTicket });
       return updatedTicket;
     } catch (err) {
       console.log(err);

@@ -10,9 +10,6 @@ import {
   TextInput,
   BooleanInput,
   Edit,
-  ArrayInput,
-  ChipField,
-  SimpleFormIterator
 } from 'react-admin';
 
 export const UserList = (props: any) => (
