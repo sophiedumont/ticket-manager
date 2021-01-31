@@ -11,7 +11,7 @@ import { Save } from '@material-ui/icons'
 import { useDispatch, useSelector } from 'react-redux'
 import { rootState } from '../Redux/store'
 import { useHistory } from 'react-router-dom'
-import { resetCreateTicketError, resetUpdateTicketError } from '../Redux/Ticket/actions'
+import { resetCreateTicketError, resetUpdateTicketError, resetTicketSuccess } from '../Redux/Ticket/actions'
 import { Snackbar } from '@material-ui/core'
 import { Alert } from '@material-ui/lab'
 import Box from '@material-ui/core/Box'
@@ -56,17 +56,10 @@ export default function TicketForm({ handleSubmit, ticket }: TicketFormProps) {
   const updateError = useSelector((state: rootState) => state.ticket.updateTicketError)
   let history = useHistory();
 
-  const prevTicket = usePrevious(ticket);
-
-  useEffect(() => {
-    if (createSuccess || updateSuccess){
-      history.push("/tickets");
-    }
-  }, [createSuccess || updateSuccess])
-
+  const prevTicket: TicketModel = usePrevious<TicketModel>(ticket);
 
   useEffect(()=>{
-    if (!prevTicket && ticket) {
+    if ((!prevTicket && ticket) || (ticket && prevTicket.id !== ticket.id)) {
       setSubject(ticket.subject);
       setContent(ticket.content);
       setType(ticket.type);
@@ -76,6 +69,11 @@ export default function TicketForm({ handleSubmit, ticket }: TicketFormProps) {
 
   const onSubmitTicket = async () => {
     await handleSubmit(subject, content, type, priority)
+  }
+
+  const handleCloseSnackBarSuccess = () => {
+    dispatch(resetTicketSuccess());
+    history.push("/tickets");
   }
 
   const handleCloseSnackBar = () => {
@@ -162,6 +160,11 @@ export default function TicketForm({ handleSubmit, ticket }: TicketFormProps) {
           >Save
           </Button>
         </Box>
+        <Snackbar open={createSuccess || updateSuccess} autoHideDuration={2000} onClose={handleCloseSnackBarSuccess}>
+          <Alert onClose={handleCloseSnackBarSuccess} severity="success">
+            Ticket saved !
+          </Alert>
+        </Snackbar>
           <Snackbar open={createError || updateError} autoHideDuration={6000} onClose={handleCloseSnackBar}>
             <Alert onClose={handleCloseSnackBar} severity="error">
               Ticket not created. Fill each field.

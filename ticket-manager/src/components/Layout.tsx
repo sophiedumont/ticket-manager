@@ -7,10 +7,19 @@ import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import AppBar from '@material-ui/core/AppBar';
 import { useHistory } from 'react-router-dom'
 import { pageStyles } from '../common/theme'
+import { useDispatch} from 'react-redux'
+import { logoutAndUnsetJWT } from '../Redux/User/action'
 
 const Layout = () => {
   const classes = pageStyles();
   let history = useHistory();
+  const dispatch = useDispatch();
+
+  const onLogout = () => {
+    dispatch(logoutAndUnsetJWT());
+    history.push("/login");
+  }
+
   return (
       <AppBar position="absolute">
         <Toolbar className={classes.toolbar}>
@@ -24,7 +33,7 @@ const Layout = () => {
           >
             Ticket Manager
           </Typography>
-          <IconButton color="inherit">
+          <IconButton onClick={onLogout} color="inherit">
             <Badge color="secondary">
               <ExitToAppIcon />
             </Badge>

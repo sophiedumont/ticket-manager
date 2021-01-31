@@ -6,13 +6,13 @@ import TicketForm from './TicketForm'
 import Layout from './Layout'
 import Typography from '@material-ui/core/Typography';
 import { pageStyles } from '../common/theme'
-import { createOneTicket, getOneTicket, getUserConnectedTickets, updateOneTicket } from '../Redux/Ticket/actions'
+import { getOneTicket, updateOneTicket } from '../Redux/Ticket/actions'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   useParams
 } from "react-router-dom";
 import { rootState } from '../Redux/store'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 
 
@@ -20,14 +20,17 @@ const UpdateTicket = () => {
   //@ts-ignore
   let { id } = useParams();
   const ticketToUpdate = useSelector((state: rootState) => state.ticket.oneTicket);
-  const ticketError = useSelector((state: rootState) => state.ticket.updateTicketError);
+  const [didInit, setInit] = useState(false);
   const dispatch = useDispatch()
 
   console.log(id);
 
+  console.log({didInit})
+
   useEffect( () => {
-    if(!ticketToUpdate){
+    if(!didInit){
       const getTicket = async () => {
+        setInit(true);
         dispatch(await getOneTicket(id));
       }
       getTicket();

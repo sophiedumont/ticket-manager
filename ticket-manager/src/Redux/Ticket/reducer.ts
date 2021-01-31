@@ -7,6 +7,7 @@ import {
   GET_TICKETS_ERROR,
   RESET_CREATE_TICKET_ERROR,
   RESET_GET_TICKET_ERROR,
+  RESET_SUCCESS,
   RESET_UPDATE_TICKET_ERROR,
   UPDATE_ONE_TICKET,
   UPDATE_TICKET_ERROR,
@@ -55,7 +56,11 @@ function reducer(state = initialState, action: reduxAction) {
     case RESET_GET_TICKET_ERROR:
       return { ...state, getTicketsError: false };
     case CREATE_TICKET:
-      return { ...state, createdTicket: true };
+      return {
+        ...state,
+        createdTicket: true,
+        tickets: [action.payload.createdTicket, ...(state.tickets || [])],
+      };
     case CREATE_TICKET_ERROR:
       return { ...state, getCreatedTicketsError: true };
     case RESET_CREATE_TICKET_ERROR:
@@ -65,11 +70,30 @@ function reducer(state = initialState, action: reduxAction) {
     case GET_TICKET_ERROR:
       return { ...state, getOneTicketError: true };
     case UPDATE_ONE_TICKET:
-      return { ...state, updatedTicket: true };
+      return {
+        ...state,
+        updatedTicket: true,
+        tickets: [
+          action.payload.updatedTicket,
+          ...(state.tickets || []).filter(
+            (t) => action.payload.updatedTicket.id !== t.id
+          ),
+        ],
+      };
     case UPDATE_TICKET_ERROR:
       return { ...state, updateTicketError: true };
     case RESET_UPDATE_TICKET_ERROR:
       return { ...state, updateTicketError: false };
+    case RESET_SUCCESS:
+      return {
+        ...state,
+        updatedTicket: false,
+        createdTicket: false,
+        getTicketsError: false,
+        getCreatedTicketsError: false,
+        getOneTicketError: false,
+        updateTicketError: false,
+      };
     default:
       return state;
   }

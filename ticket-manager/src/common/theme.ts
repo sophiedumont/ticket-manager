@@ -9,7 +9,6 @@ export const pageStyles = makeStyles((theme) => ({
     marginBottom: 16,
     cursor: "pointer",
   },
-
   toolbar: {
     paddingRight: 24,
   },

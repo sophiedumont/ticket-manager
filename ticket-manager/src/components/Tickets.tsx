@@ -1,14 +1,9 @@
-import React, { useState, useEffect } from 'react';
 import Container from '@material-ui/core/Container';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
-import { makeStyles } from '@material-ui/core/styles';
 import TicketTable from './TicketTable'
 import Layout from './Layout'
-import { useSelector } from 'react-redux'
-import { rootState } from '../Redux/store'
 import { pageStyles } from '../common/theme'
-
 
 const Tickets = () => {
 

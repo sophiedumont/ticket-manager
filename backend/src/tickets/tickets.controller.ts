@@ -40,13 +40,13 @@ export class TicketsController {
   async create(
     @Request() req,
     @Body() createTicketDto: CreateTicketDto,
-  ): Promise<Ticket> {
+  ): Promise<any> {
     try {
       const ticket = await this.ticketsService.createWithCreator(
         req.user,
         createTicketDto,
       );
-      return ticket;
+      return schemaToAdminDto(ticket);
     } catch (err) {
       console.log(err);
       throw new HttpException(

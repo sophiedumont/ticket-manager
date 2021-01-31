@@ -1,4 +1,6 @@
+export const REHYDRATE = "persist/REHYDRATE";
 export const SET_JWT = "@USER/SET_JWT";
+export const UNSET_JWT = "@USER/UNSET_JWT";
 export const LOGIN_ERROR = "@USER/LOGIN_ERROR";
 export const RESET_LOGIN_ERROR = "@USER/RESET_LOGIN_ERROR";
 export const USER_INFO_ERROR = "@USER/USER_INFO_ERROR";

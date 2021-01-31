@@ -8,6 +8,7 @@ import {
   GET_TICKETS_ERROR,
   RESET_CREATE_TICKET_ERROR,
   RESET_GET_TICKET_ERROR,
+  RESET_SUCCESS,
   RESET_UPDATE_TICKET_ERROR,
   UPDATE_ONE_TICKET,
   UPDATE_TICKET_ERROR,
@@ -50,7 +51,7 @@ export async function updateOneTicket(
   priority: string
 ) {
   try {
-    await requestService.put(`tickets/${id}`, {
+    const response = await requestService.put(`tickets/${id}`, {
       subject: subject,
       content: content,
       type: type,
@@ -58,6 +59,7 @@ export async function updateOneTicket(
     });
     return {
       type: UPDATE_ONE_TICKET,
+      payload: { updatedTicket: response.data },
     };
   } catch (e) {
     return {
@@ -73,7 +75,7 @@ export async function createOneTicket(
   priority: string
 ): Promise<reduxAction> {
   try {
-    await requestService.post("tickets", {
+    const response = await requestService.post("tickets", {
       subject: subject,
       content: content,
       type: type,
@@ -81,6 +83,7 @@ export async function createOneTicket(
     });
     return {
       type: CREATE_TICKET,
+      payload: { createdTicket: response.data },
     };
   } catch (e) {
     return {
@@ -103,5 +106,11 @@ export function resetCreateTicketError(): reduxAction {
 export function resetUpdateTicketError(): reduxAction {
   return {
     type: RESET_UPDATE_TICKET_ERROR,
+  };
+}
+
+export function resetTicketSuccess(): reduxAction {
+  return {
+    type: RESET_SUCCESS,
   };
 }

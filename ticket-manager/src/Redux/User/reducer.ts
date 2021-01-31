@@ -9,11 +9,15 @@ import {
   REGISTER,
   RESET_REGISTER_ERROR,
   RESET_REGISTER_SUCCESS,
+  REHYDRATE,
+  UNSET_JWT,
 } from "./constants";
 import { reduxAction } from "../../types/actions.type";
+import requestService from "../../common/requestService";
 
 export interface userStore {
   jwt: string;
+  canUseApp: boolean;
   loginError: boolean;
   register: boolean;
   registerError: boolean;
@@ -25,6 +29,7 @@ export interface userStore {
 const initialState = {
   jwt: "",
   loginError: false,
+  canUseApp: false,
   errorMessage: "User or email already exists",
   userInfo: {},
   getUserError: false,
@@ -34,8 +39,15 @@ const initialState = {
 
 function reducer(state = initialState, action: reduxAction) {
   switch (action.type) {
+    case REHYDRATE:
+      if (action.payload.user.jwt) {
+        requestService.setJwt(action.payload.user.jwt);
+      }
+      return state;
     case SET_JWT:
-      return { ...state, jwt: action.payload };
+      return { ...state, jwt: action.payload, canUseApp: true };
+    case UNSET_JWT:
+      return { ...state, jwt: action.payload, canUseApp: false };
     case LOGIN_ERROR:
       return { ...state, loginError: true };
     case RESET_LOGIN_ERROR:

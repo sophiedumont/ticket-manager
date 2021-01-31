@@ -9,6 +9,7 @@ import {
   REGISTER_ERROR,
   RESET_REGISTER_ERROR,
   RESET_REGISTER_SUCCESS,
+  UNSET_JWT,
 } from "./constants";
 import { reduxAction } from "../../types/actions.type";
 import requestService from "../../common/requestService";
@@ -32,6 +33,14 @@ export async function loginAndSetJWT(
       type: LOGIN_ERROR,
     };
   }
+}
+
+export function logoutAndUnsetJWT() {
+  requestService.setJwt("");
+  return {
+    type: UNSET_JWT,
+    payload: "",
+  };
 }
 
 export function resetLoginError(): reduxAction {

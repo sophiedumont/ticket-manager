@@ -24,16 +24,16 @@ const Login = () => {
   const [password, setPassword] = useState('');
 
   const jwtToken = useSelector((state: rootState) => state.user.jwt)
+  const canUseApp = useSelector((state: rootState) => state.user.canUseApp)
   const loginError = useSelector((state: rootState) => state.user.loginError)
   const dispatch = useDispatch()
   let history = useHistory();
 
   useEffect(() => {
-    if (jwtToken.length) {
+    if (canUseApp) {
       history.push("/tickets");
     }
-    console.log({jwtToken})
-  }, [jwtToken])
+  }, [canUseApp])
 
   const loginAndSetJwt = async () => {
     dispatch(await loginAndSetJWT(username, password));

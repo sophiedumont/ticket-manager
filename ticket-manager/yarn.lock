@@ -10019,6 +10019,11 @@ redent@^3.0.0:
     indent-string "^4.0.0"
     strip-indent "^3.0.0"
 
+redux-persist@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/redux-persist/-/redux-persist-6.0.0.tgz#b4d2972f9859597c130d40d4b146fecdab51b3a8"
+  integrity sha512-71LLMbUq2r02ng2We9S215LtPu3fY0KgaGE0k8WRgl6RkqxtGfl7HUozz1Dftwsb0D/5mZ8dwAaPbtnzfvbEwQ==
+
 redux-react-hook@^4.0.3:
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/redux-react-hook/-/redux-react-hook-4.0.3.tgz#859a9ba517f7e2e934def3b6aaa5c5a8da921cdc"

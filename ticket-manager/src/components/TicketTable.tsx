@@ -15,20 +15,15 @@ import { useHistory } from 'react-router-dom'
 import { Snackbar } from '@material-ui/core'
 import { Alert } from '@material-ui/lab'
 
-
-function preventDefault(event:any) {
-  event.preventDefault();
-}
-
 const columns: ColDef[] = [
   { field: 'id', headerName: 'Id', width: 130,  hide: true },
   { field: 'status', headerName: 'Status', width: 130 },
   { field: 'subject', headerName: 'Subject', width: 130 },
-  { field: 'content', headerName: 'Content', width: 130 },
+  { field: 'content', headerName: 'Content', width: 260 },
   { field: 'priority', headerName: 'Priority', width: 130 },
   { field: 'type', headerName: 'Type', width: 130 },
-  { field: 'createdAt', headerName: 'CreatedAt', width: 130 },
-  { field: 'updatedAt', headerName: 'UpdateAt', width: 130 },
+  { field: 'createdAt', headerName: 'CreatedAt', width: 200 },
+  { field: 'updatedAt', headerName: 'UpdateAt', width: 200 },
 ];
 
 const useStyles = makeStyles((theme) => ({
@@ -66,7 +61,6 @@ export default function TicketTable() {
         dispatch(await getUserConnectedTickets());
       }
       getTickets();
-      console.log(tickets);
     }
   });
 

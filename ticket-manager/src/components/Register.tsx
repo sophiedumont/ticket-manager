@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -5,7 +6,6 @@ import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import Container from '@material-ui/core/Container';
 import { useDispatch, useSelector } from 'react-redux'
-import React, { useState, useEffect } from 'react';
 import { rootState } from '../Redux/store'
 import { Snackbar } from '@material-ui/core'
 import { useHistory } from "react-router-dom";
