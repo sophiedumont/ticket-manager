@@ -88,7 +88,10 @@ export class TicketsService {
     return this.ticketModel.findOne({ _id: id }).populate('creator').exec();
   }
 
-  async findAllWithCreator(id: string, page: PageDto): Promise<Ticket[]> {
+  async findAllWithCreator(
+    id: string,
+    page: PageDto,
+  ): Promise<[Ticket[], number, string]> {
     try {
       const range = page.sort ? JSON.parse(page.range) : [0, 9];
       const limit = range[1] + 1 - range[0];
@@ -120,8 +123,8 @@ export class TicketsService {
   ) {
     const ticket = await this.findOneWithCreator(id);
     if ((ticket.creator as User)._id.toString() === userId) {
-      const result = await this.update(id, updateTicketDto);
-      return result;
+      const updatedTicket = await this.updateDocument(id, updateTicketDto);
+      return updatedTicket;
     } else {
       throw { message: 'You are not allowed to update this ticket' };
     }

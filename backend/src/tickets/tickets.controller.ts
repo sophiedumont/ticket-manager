@@ -20,6 +20,8 @@ import { ApiBearerAuth, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PageDto } from '../dto/page.dto';
+import { schemaToAdminDto } from '../admin/dto/admin-response.dto';
+import { JwtAdminAuthGuard } from '../auth/jwt-admin-auth.guard';
 
 @ApiTags('tickets')
 @Controller('tickets')
@@ -74,7 +76,7 @@ export class TicketsController {
       range,
     ] = await this.ticketsService.findAllWithCreator(req.user.id, pageDto);
     const header = 'tickets ' + range + '/' + total;
-    return tickets;
+    return tickets.map((t) => schemaToAdminDto(t));
   }
 
   @Get(':id')
@@ -84,10 +86,10 @@ export class TicketsController {
     description: 'A specific ticket',
     type: Ticket,
   })
-  async findOne(@Param('id') id: string): Promise<Ticket> {
+  async findOne(@Param('id') id: string): Promise<any> {
     try {
       const ticket = await this.ticketsService.findOne(id);
-      return ticket;
+      return schemaToAdminDto(ticket);
     } catch (err) {
       throw new HttpException(
         {
@@ -99,24 +101,27 @@ export class TicketsController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Put(':id')
   @HttpCode(200)
   @ApiResponse({
     status: 200,
-    description: 'Modify a Ticket',
+    description: 'Modify the content of a Ticket',
     type: Ticket,
   })
-  async update(
+  async updateOneTicketContent(
     @Param('id') id: string,
     @Body() updateTicketDto: UpdateTicketDto,
-  ): Promise<Ticket> {
+  ): Promise<any> {
     try {
       const updatedTicket = await this.ticketsService.update(
         id,
         updateTicketDto,
       );
-      return updatedTicket;
+      return schemaToAdminDto(updatedTicket);
     } catch (err) {
+      console.log(err);
       throw new HttpException(
         {
           status: HttpStatus.BAD_REQUEST,
